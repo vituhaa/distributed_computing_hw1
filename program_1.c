@@ -97,24 +97,6 @@ int main(int argc, char** argv) {
 	}
 
 	unsigned char color[3];
-
-        //for (int h = 0; h < HEIGHT; h++){
-        //        for (int w = 0; w < WIDTH; w++){
-        //                if (colors[h][w] == MAX_ITERATIONS){
-        //                        color[0] = 0;
-        //                        color[1] = 0;
-        //                        color[2] = 0;
-        //                }
-        //                else{
-        //                        color[0] = 255;
-        //                        color[1] = 255;
-        //                        color[2] = 255;
-        //                }
-
-        //                fwrite(color, 1, 3, output_ppm);
-        //        }
-        //}
-	
 	for (int h = 0; h < HEIGHT; h++){
 		for (int w = 0; w < WIDTH; w++){
 			if (colors[h][w] == MAX_ITERATIONS){
