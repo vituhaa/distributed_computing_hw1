@@ -25,18 +25,18 @@ int my_rwlock_destroy(My_struct* my_rwlock) {
 
 // несколько потоков могут читать, но только один - писать
 int my_rwlock_rdlock(My_struct* my_rwlock) {
-    printf("thread %lu: in rdlock\n", (unsigned long)pthread_self()); // идентификатор для отладки
+    // printf("thread %lu: in rdlock\n", (unsigned long)pthread_self()); // идентификатор для отладки
   
     pthread_mutex_lock(&my_rwlock->mutex);
 
     if (my_rwlock->f || my_rwlock->waiting_writers) { // получил ли писатель блокировку или есть ли ожидающий писатель
     	my_rwlock->waiting_readers++; // добавляется ожидающий читатель
 	while (my_rwlock->f || my_rwlock->waiting_writers) {
-		printf("thread %lu: waiting for read\n", (unsigned long)pthread_self());
+		// printf("thread %lu: waiting for read\n", (unsigned long)pthread_self());
         	
 		pthread_cond_wait(&my_rwlock->for_read, &my_rwlock->mutex); // блокируем поток, освобождаем мьютекс
 
-		printf("thread %lu: woke up\n", (unsigned long)pthread_self());
+		// printf("thread %lu: woke up\n", (unsigned long)pthread_self());
     	}
 	my_rwlock->waiting_readers--; // из ожидания переводим в чтение
     }
