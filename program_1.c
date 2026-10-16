@@ -48,9 +48,9 @@ void* routine(void* rank){
 	int break_f = 0; // условие выхода - достигли указанного количества точек
 
         for (int i = my_start; i < my_end; i++){
-                float c_y = -1.0f + i * (2.0f / HEIGHT); // ищем в области [-1, 1]
+                float c_y = -2.0f + i * (4.0f / HEIGHT); // ищем в области [-2, 2]
                 for (int j = 0; j < WIDTH; j++){
-                        float c_x = -1.0f + j * (2.0f / WIDTH);
+                        float c_x = -2.5f + j * (4.0f / WIDTH); // ищем в области [-2.5, 1.5]
 
                         colors[i][j] = mandelbrot(c_x, c_y); // записываем итерации
 
