@@ -10,13 +10,13 @@
 int thread_count;
 int point_count;
 
-int colors[HEIGHT][WIDTH];
+int colors[HEIGHT][WIDTH]; // для записи в ppm файл
 
 struct pairs{
 	float x, y;
 };
 
-struct pairs *coords = NULL;
+struct pairs *coords = NULL; // для записи в csv файл
 
 int mandelbrot(float c_x, float c_y){
         float z_x = 0.0f;
@@ -27,8 +27,8 @@ int mandelbrot(float c_x, float c_y){
         int iterations = 0;
 
         while (zx_sq + zy_sq < MAX_RADIUS && iterations < MAX_ITERATIONS){
-                z_y = 2 * z_x * z_y + c_y;
-                z_x = zx_sq - zy_sq + c_x;
+                z_y = 2 * z_x * z_y + c_y; // мнимая часть 
+                z_x = zx_sq - zy_sq + c_x; // действительная
 
                 zx_sq = z_x * z_x;
                 zy_sq = z_y * z_y;
@@ -40,24 +40,26 @@ int mandelbrot(float c_x, float c_y){
 
 void* routine(void* rank){
         long my_rank = (long)rank;
-        int my_ids = HEIGHT / thread_count;
-        int my_start = my_rank * my_ids;
-        int my_end = my_start + my_ids;
+        int my_ids = HEIGHT / thread_count; // делим на блоки
+        int my_start = my_rank * my_ids; // определяем старт для каждого потока
+        int my_end = my_start + my_ids; // определяем конец для каждого потока
 
 	int curr_num = 0;
-	int break_f = 0;
+	int break_f = 0; // условие выхода - достигли указанного количества точек
 
         for (int i = my_start; i < my_end; i++){
-                float c_y = -1.0f + i * (2.0f / HEIGHT);
+                float c_y = -1.0f + i * (2.0f / HEIGHT); // ищем в области [-1, 1]
                 for (int j = 0; j < WIDTH; j++){
                         float c_x = -1.0f + j * (2.0f / WIDTH);
 
-                        colors[i][j] = mandelbrot(c_x, c_y);
+                        colors[i][j] = mandelbrot(c_x, c_y); // записываем итерации
 
+			// записываем координаты
 			coords[curr_num].x = c_x;
 			coords[curr_num].y = c_y;
 			curr_num += 1;
 
+			// достигли point_count, выходим
 			if (curr_num >= point_count){
 				break_f = 1;
 				break;
@@ -100,12 +102,12 @@ int main(int argc, char** argv) {
 	for (int h = 0; h < HEIGHT; h++){
 		for (int w = 0; w < WIDTH; w++){
 			if (colors[h][w] == MAX_ITERATIONS){
-				color[0] = 0;
+				color[0] = 0; // чёрный - в множестве
 				color[1] = 0;
 				color[2] = 0;
 			}
 			else{
-				color[0] = 255;
+				color[0] = 255; // белый - не в множестве
 				color[1] = 255;
 				color[2] = 255;
 			}
