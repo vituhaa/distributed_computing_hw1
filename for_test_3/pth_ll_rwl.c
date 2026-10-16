@@ -22,7 +22,7 @@ int         total_ops;
 double      insert_percent;
 double      search_percent;
 double      delete_percent;
-My_struct	my_rwlock;
+My_struct	my_rwlock; // наша структура и экземпляр
 pthread_mutex_t     count_mutex;
 int         member_count = 0, insert_count = 0, delete_count = 0;
 
