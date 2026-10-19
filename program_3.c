@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <pthread.h>
 
 typedef struct {
     pthread_mutex_t mutex; // мьютекс
