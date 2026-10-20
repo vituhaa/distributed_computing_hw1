@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <string.h>
 #include "for_test_3/timer.h"
 
 #define HEIGHT 800
@@ -18,6 +19,8 @@ struct pairs{
 };
 
 struct pairs *coords = NULL; // для записи в csv файл
+
+int iteration_count = 5;
 
 int mandelbrot(float c_x, float c_y){
         float z_x = 0.0f;
@@ -80,57 +83,73 @@ int main(int argc, char** argv) {
         thread_count = strtol(argv[1], NULL, 10);
         point_count = strtol(argv[2], NULL, 10);
 
-        pthread_t* thread_handles = malloc(thread_count * sizeof(pthread_t));
-	coords = malloc(point_count * sizeof(*coords));
+        coords = malloc(point_count * sizeof(*coords));
 
-        // создание файла
-        FILE* output_csv = fopen("Mandelbrot.csv", "w");
-	if (!output_csv){
-		printf("файла нет\n");
-	}
-	fprintf(output_csv, "X, Y\n");
+        double total_time;
+        for (int i = 0; i < iteration_count; i++)
+        {
+                printf("\nIteration %d\n", i + 1);
+		double start, end;
 
-        FILE* output_ppm = fopen("Mandelbrot.ppm", "wb");
-        fprintf(output_ppm, "P6\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
+                // создание файла
+                FILE* output_csv = fopen("Mandelbrot.csv", "w");   
+	        fprintf(output_csv, "X, Y\n");
 
-	GET_TIME(start);
+                // сброс cords и colors для новой итерации
+                memset(coords, 0, point_count * sizeof(*coords));
+                memset(colors, 0, sizeof colors);
 
-        for (long i = 0; i < thread_count; ++i){
-                pthread_create(&thread_handles[i], NULL, routine, (void*) i);
-        }
+                // создание потоков и выполнение routine
+                pthread_t* thread_handles = malloc(thread_count * sizeof(pthread_t));
 
-        for (long i = 0; i < thread_count; ++i){
-                pthread_join(thread_handles[i], NULL);
-        }
+	        GET_TIME(start);
 
-	GET_TIME(end);
-	printf("elapsed time = %.5f\n", end - start);
-
-	for (int i = 0; i < point_count; i++){
-                fprintf(output_csv, "%f, %f\n", coords[i].x, coords[i].y);
-        }
-
-        unsigned char color[3];
-        for (int h = 0; h < HEIGHT; h++){
-                for (int w = 0; w < WIDTH; w++){
-                        if (colors[h][w] == MAX_ITERATIONS){
-                                color[0] = 0; // чёрный - в множестве
-                                color[1] = 0;
-                                color[2] = 0;
-                        }
-                        else{
-                                color[0] = 255; // белый - не в множестве
-                                color[1] = 255;
-                                color[2] = 255;
-                        }
-                        fwrite(color, 1, 3, output_ppm);
+                for (long i = 0; i < thread_count; ++i){
+                        pthread_create(&thread_handles[i], NULL, routine, (void*) i);
                 }
+
+                for (long i = 0; i < thread_count; ++i){
+                        pthread_join(thread_handles[i], NULL);
+                }
+
+	        GET_TIME(end);
+                total_time += (end - start);
+	        printf("Elapsed time = %.5f (sec)\n", end - start);
+
+	        for (int i = 0; i < point_count; i++){
+                        fprintf(output_csv, "%f, %f\n", coords[i].x, coords[i].y);
+                }
+
+                fclose(output_csv);
+
+                FILE* output_ppm = fopen("Mandelbrot.ppm", "wb");
+                fprintf(output_ppm, "P6\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
+
+                unsigned char color[3];
+                for (int h = 0; h < HEIGHT; h++){
+                        for (int w = 0; w < WIDTH; w++){
+                                if (colors[h][w] == MAX_ITERATIONS){
+                                        color[0] = 0; // чёрный - в множестве
+                                        color[1] = 0;
+                                        color[2] = 0;
+                                }
+                                else{
+                                        color[0] = 255; // белый - не в множестве
+                                        color[1] = 255;
+                                        color[2] = 255;
+                                }
+                                fwrite(color, 1, 3, output_ppm);
+                        }
+                }
+
+                fclose(output_ppm);
+
+                free(thread_handles);
         }
+
+        printf("\nAverage time per %d iterations: %lf (sec)\n", iteration_count, total_time / iteration_count);
 
 	free(coords);
-        free(thread_handles);
 
-	fclose(output_csv);
-	fclose(output_ppm);
         return 0;
 }

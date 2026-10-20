@@ -27,6 +27,8 @@ pthread_barrier_t barrier;
 
 FILE *output_csv; 
 
+int iteration_count = 5;
+
 // сила на тело q со стороны тела k
 double calc_fqk(double mk, double mq, double r2, double delta){
     if (r2 == 0){
@@ -141,8 +143,6 @@ void* routine(void* rank){
 
 int main(int argc, char** argv){
 
-	double start, end;
-
 	if (argc < 4){
 		return 1;
     	}
@@ -201,35 +201,51 @@ int main(int argc, char** argv){
 
 	pthread_barrier_init(&barrier, NULL, thread_count);
 
-	output_csv = fopen("Trajectories.csv", "w");
-	fprintf(output_csv, "t, ");
-	for (int i = 0; i < n; i++){
-		fprintf(output_csv, "x%d, y%d, z%d ", i + 1, i + 1, i + 1);
-	}
-	// создание потоков и выполнение routine:
-	pthread_t* thread_handles = malloc(thread_count * sizeof(pthread_t));
+	double total_time;
+
+	for (int i = 0; i < iteration_count; i++)
+	{
+		printf("\nIteration %d\n", i + 1);
+		double start, end;
+
+		// открытие файла
+		output_csv = fopen("Trajectories.csv", "w");
+		fprintf(output_csv, "t, ");
+		for (int i = 0; i < n; i++){
+			fprintf(output_csv, "x%d, y%d, z%d ", i + 1, i + 1, i + 1);
+		}
+
+		// сброс forces для новой итерации
+		memset(forces, 0, n * thread_count * 3 * sizeof(double));
+
+		// создание потоков и выполнение routine:
+		pthread_t* thread_handles = malloc(thread_count * sizeof(pthread_t));
 	
-	GET_TIME(start);
+		GET_TIME(start);
 
-	for (long i = 0; i < thread_count; ++i){
-		pthread_create(&thread_handles[i], NULL, routine, (void*) i);
+		for (long i = 0; i < thread_count; ++i){
+			pthread_create(&thread_handles[i], NULL, routine, (void*) i);
+		}
+
+		for (int i = 0; i < thread_count; ++i){
+			pthread_join(thread_handles[i], NULL);
+		}
+
+		GET_TIME(end);
+		total_time += (end - start);
+		printf("Elapsed time = %.5f (sec)\n", end - start);
+
+		fclose(output_csv);
+		free(thread_handles);
 	}
 
-	for (int i = 0; i < thread_count; ++i){
-		pthread_join(thread_handles[i], NULL);
-	}
-
-	GET_TIME(end);
-	printf("elapsed time = %.5f\n", end - start);
-
-	fclose(output_csv);
+	printf("\nAverage time per %d iterations: %lf (sec)\n", iteration_count, total_time / iteration_count);
 
 	// освобождение памяти
 	pthread_barrier_destroy(&barrier);
 
 	free(forces);
 	free(bodies_list);
-	free(thread_handles);
 
 	return 0;
 }
