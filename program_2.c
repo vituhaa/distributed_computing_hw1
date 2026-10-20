@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "timer.h"
+#include "for_test_3/timer.h"
 
 const double g = 6.67430e-11;
 
@@ -141,6 +141,8 @@ void* routine(void* rank){
 
 int main(int argc, char** argv){
 
+	double start, end;
+
 	if (argc < 4){
 		return 1;
     	}
@@ -207,7 +209,7 @@ int main(int argc, char** argv){
 	// создание потоков и выполнение routine:
 	pthread_t* thread_handles = malloc(thread_count * sizeof(pthread_t));
 	
-	double timer_start = get_time();
+	GET_TIME(start);
 
 	for (long i = 0; i < thread_count; ++i){
 		pthread_create(&thread_handles[i], NULL, routine, (void*) i);
@@ -217,8 +219,8 @@ int main(int argc, char** argv){
 		pthread_join(thread_handles[i], NULL);
 	}
 
-	double timer_res = get_time() - timer_start;
-	printf("elapsed time = %.5f\n", timer_res);
+	GET_TIME(end);
+	printf("elapsed time = %.5f\n", end - start);
 
 	fclose(output_csv);
 

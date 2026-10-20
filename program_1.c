@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <stdlib.h>
-#include "timer.h"
+#include "for_test_3/timer.h"
 
 #define HEIGHT 800
 #define WIDTH 800
@@ -74,6 +74,8 @@ void* routine(void* rank){
 }
 
 int main(int argc, char** argv) {
+	
+	double start, end;
 
         thread_count = strtol(argv[1], NULL, 10);
         point_count = strtol(argv[2], NULL, 10);
@@ -91,7 +93,7 @@ int main(int argc, char** argv) {
         FILE* output_ppm = fopen("Mandelbrot.ppm", "wb");
         fprintf(output_ppm, "P6\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
 
-	double timer_start = get_time();
+	GET_TIME(start);
 
         for (long i = 0; i < thread_count; ++i){
                 pthread_create(&thread_handles[i], NULL, routine, (void*) i);
@@ -101,8 +103,8 @@ int main(int argc, char** argv) {
                 pthread_join(thread_handles[i], NULL);
         }
 
-	double timer_res = get_time() - timer_start;
-	printf("elapsed time = %.5f\n", timer_res);
+	GET_TIME(end);
+	printf("elapsed time = %.5f\n", end - start);
 
 	for (int i = 0; i < point_count; i++){
                 fprintf(output_csv, "%f, %f\n", coords[i].x, coords[i].y);
