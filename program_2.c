@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include "timer.h"
 
 const double g = 6.67430e-11;
 
@@ -12,11 +13,6 @@ typedef struct
 	double radius_list[3];
 	double speed_list[3];
 } Body;
-
-typedef struct
-{
-	double x, y, z;
-} Output;
 
 Body *bodies_list;
 
@@ -84,9 +80,9 @@ void* routine(void* rank){
 
 				double r2 = pow(delta_x, 2) + pow(delta_y, 2) + pow(delta_z, 2);
 				
-				printf("\n");
-				printf("r2 = %lf\n", r2);
-				printf("\n");
+				// printf("\n");
+				// printf("r2 = %lf\n", r2);
+				// printf("\n");
 
 				double f_xqk = calc_fqk(bodies_list[k].mass, bodies_list[q].mass, r2, delta_x);
 				double f_yqk = calc_fqk(bodies_list[k].mass, bodies_list[q].mass, r2, delta_y);
@@ -110,7 +106,7 @@ void* routine(void* rank){
                 int new_r = n % thread_count;
 
                 int new_start = my_rank * new_q + (my_rank < new_r ? my_rank : new_r);
-                int new_end = start + new_q + (my_rank < new_r ? 1 : 0);
+                int new_end = new_start + new_q + (my_rank < new_r ? 1 : 0);
 
                 //printf("CURR NEW START = %d\n", new_start);
                 //printf("CURR NEW END = %d\n", new_end);
@@ -210,6 +206,8 @@ int main(int argc, char** argv){
 	}
 	// создание потоков и выполнение routine:
 	pthread_t* thread_handles = malloc(thread_count * sizeof(pthread_t));
+	
+	double timer_start = get_time();
 
 	for (long i = 0; i < thread_count; ++i){
 		pthread_create(&thread_handles[i], NULL, routine, (void*) i);
@@ -218,6 +216,9 @@ int main(int argc, char** argv){
 	for (int i = 0; i < thread_count; ++i){
 		pthread_join(thread_handles[i], NULL);
 	}
+
+	double timer_res = get_time() - timer_start;
+	printf("elapsed time = %.5f\n", timer_res);
 
 	fclose(output_csv);
 
