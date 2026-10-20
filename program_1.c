@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include "timer.h"
 
 #define HEIGHT 800
 #define WIDTH 800
@@ -90,33 +91,38 @@ int main(int argc, char** argv) {
         FILE* output_ppm = fopen("Mandelbrot.ppm", "wb");
         fprintf(output_ppm, "P6\n%d %d\n%d\n", WIDTH, HEIGHT, 255);
 
+	double timer_start = get_time();
+
         for (long i = 0; i < thread_count; ++i){
                 pthread_create(&thread_handles[i], NULL, routine, (void*) i);
         }
 
-        for (int i = 0; i < point_count; i++){
-                fprintf(output_csv, "%f, %f\n", coords[i].x, coords[i].y);
-	}
-
-	unsigned char color[3];
-	for (int h = 0; h < HEIGHT; h++){
-		for (int w = 0; w < WIDTH; w++){
-			if (colors[h][w] == MAX_ITERATIONS){
-				color[0] = 0; // чёрный - в множестве
-				color[1] = 0;
-				color[2] = 0;
-			}
-			else{
-				color[0] = 255; // белый - не в множестве
-				color[1] = 255;
-				color[2] = 255;
-			}
-			fwrite(color, 1, 3, output_ppm);
-		}
-	}
-
         for (long i = 0; i < thread_count; ++i){
                 pthread_join(thread_handles[i], NULL);
+        }
+
+	double timer_res = get_time() - timer_start;
+	printf("elapsed time = %.5f\n", timer_res);
+
+	for (int i = 0; i < point_count; i++){
+                fprintf(output_csv, "%f, %f\n", coords[i].x, coords[i].y);
+        }
+
+        unsigned char color[3];
+        for (int h = 0; h < HEIGHT; h++){
+                for (int w = 0; w < WIDTH; w++){
+                        if (colors[h][w] == MAX_ITERATIONS){
+                                color[0] = 0; // чёрный - в множестве
+                                color[1] = 0;
+                                color[2] = 0;
+                        }
+                        else{
+                                color[0] = 255; // белый - не в множестве
+                                color[1] = 255;
+                                color[2] = 255;
+                        }
+                        fwrite(color, 1, 3, output_ppm);
+                }
         }
 
 	free(coords);
