@@ -8,7 +8,7 @@
 /* Random ints are less than MAX_KEY */
 const int MAX_KEY = 100000000;
 
-int iteration_count = 1000;
+int iteration_count = 5;
 
 /* Struct for list nodes */
 struct list_node_s {

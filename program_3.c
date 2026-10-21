@@ -35,24 +35,22 @@ int my_rwlock_destroy(My_struct* my_rwlock) {
 
 // несколько потоков могут читать, но только один - писать
 int my_rwlock_rdlock(My_struct* my_rwlock) {
-    printf("thread %lu: in rdlock\n", (unsigned long)pthread_self()); // идентификатор для отладки
+    // printf("thread %lu: in rdlock\n", (unsigned long)pthread_self()); // идентификатор для отладки
 
     pthread_mutex_lock(&my_rwlock->mutex);
 
-    if (my_rwlock->f || my_rwlock->waiting_writers) { // получил ли писатель блокировку или есть ли ожидающий писатель
-    	my_rwlock->waiting_readers++; // добавляется ожидающий читатель
-	while (my_rwlock->f || my_rwlock->waiting_writers) {
-		printf("thread %lu: waiting for read\n", (unsigned long)pthread_self());
+    my_rwlock->waiting_readers++; // добавляется ожидающий читатель
+    while (my_rwlock->f || my_rwlock->waiting_writers) {
+	// printf("thread %lu: waiting for read\n", (unsigned long)pthread_self());
 
-		pthread_cond_wait(&my_rwlock->for_read, &my_rwlock->mutex); // блокируем поток, освобождаем мьютекс
+	pthread_cond_wait(&my_rwlock->for_read, &my_rwlock->mutex); // блокируем поток, освобождаем мьютекс
 
-		printf("thread %lu: woke up\n", (unsigned long)pthread_self());
-    	}
-	my_rwlock->waiting_readers--; // из ожидания переводим в чтение
+	// printf("thread %lu: woke up\n", (unsigned long)pthread_self());
     }
-    my_rwlock->count_readers++; // добавляем читателя, если писателя нет
+    my_rwlock->waiting_readers--; // из ожидания переводим в чтение
+    my_rwlock->count_readers++; // добавляем читателя в активного
 
-    pthread_mutex_unlock(&my_rwlock->mutex); // другой поток может захватить
+    pthread_mutex_unlock(&my_rwlock->mutex);
 
     return 0;
 }
@@ -60,11 +58,11 @@ int my_rwlock_rdlock(My_struct* my_rwlock) {
 int my_rwlock_wrlock(My_struct* my_rwlock) {
     pthread_mutex_lock(&my_rwlock->mutex);
 
-    my_rwlock->waiting_writers++; // добавляем читателя
+    my_rwlock->waiting_writers++; // добавляем ожидающего писателя
 
-    while (my_rwlock->count_readers || my_rwlock->f) { // если есть читатели или писатель не получил блокировку
+    while (my_rwlock->count_readers || my_rwlock->f) { // если есть активные читатели или какой-то писатель получил блокировку
 
-        pthread_cond_wait(&my_rwlock->for_write, &my_rwlock->mutex);
+        pthread_cond_wait(&my_rwlock->for_write, &my_rwlock->mutex); // новому писателю закрываем доступ, пока другой писатель/читатель не уйдёт
     }
 
     my_rwlock->waiting_writers--;
@@ -79,18 +77,18 @@ int my_rwlock_unlock(My_struct* my_rwlock) {
     pthread_mutex_lock(&my_rwlock->mutex);
 
     if (my_rwlock->f) {
-        my_rwlock->f = 0;
+        my_rwlock->f = 0; // если писатель держал доступ - отпускаем
     }
     else {
-        my_rwlock->count_readers--;
+        my_rwlock->count_readers--; // если читатель - отпускаем
     }
 
 
-    if (my_rwlock->count_readers == 0 && my_rwlock->waiting_writers > 0) { // если читателей больше нет, а ожидающий писатель есть
-        pthread_cond_signal(&my_rwlock->for_write); // будим одного ожидающего писателя
+    if (my_rwlock->count_readers == 0 && my_rwlock->waiting_writers > 0) { // если читателей больше нет, а ожидающие писатели есть
+        pthread_cond_signal(&my_rwlock->for_write); // будим одного ожидающего писателя забирать данные
     }
-    else if (my_rwlock->f == 0 && my_rwlock->waiting_writers == 0) { // если
-        pthread_cond_broadcast(&my_rwlock->for_read);
+    else if (my_rwlock->f == 0 && my_rwlock->waiting_writers == 0) { // если активных и ожидающих писателей нет
+        pthread_cond_broadcast(&my_rwlock->for_read); // будим всех читателей
     }
 
     pthread_mutex_unlock(&my_rwlock->mutex);
