@@ -7,6 +7,7 @@
 /* Random ints are less than MAX_KEY */
 const int MAX_KEY = 100000000;
 
+int iteration_count = 1000;
 
 /* Struct for list nodes */
 struct list_node_s {
@@ -71,18 +72,33 @@ int main(int argc, char* argv[]) {
    printf("\n");
 #  endif
 
-   thread_handles = malloc(thread_count*sizeof(pthread_t));
-   pthread_mutex_init(&count_mutex, NULL);
-   pthread_rwlock_init(&rwlock, NULL);
+   ////////////////////////////////////////////////////////
 
-   GET_TIME(start);
-   for (i = 0; i < thread_count; i++)
-      pthread_create(&thread_handles[i], NULL, Thread_work, (void*) i);
+   double total_time;
 
-   for (i = 0; i < thread_count; i++)
-      pthread_join(thread_handles[i], NULL);
-   GET_TIME(finish);
-   printf("Elapsed time = %e seconds\n", finish - start);
+   for (int iter = 0; iter < iteration_count; iter++){
+
+        printf("\nIteration %d\n", iter + 1);
+        double start, finish;
+
+        thread_handles = malloc(thread_count*sizeof(pthread_t));
+        pthread_mutex_init(&count_mutex, NULL);
+        pthread_rwlock_init(&rwlock, NULL);
+
+        GET_TIME(start);
+        for (i = 0; i < thread_count; i++)
+                pthread_create(&thread_handles[i], NULL, Thread_work, (void*)(size_t) i);
+
+        for (i = 0; i < thread_count; i++)
+                pthread_join(thread_handles[i], NULL);
+        GET_TIME(finish);
+        total_time += (finish - start);
+        printf("Elapsed time = %.5f seconds\n", finish - start);
+   }
+
+   printf("\nAverage time per %d iterations: %lf (sec)\n", iteration_count, total_time / iteration_count);
+   ////////////////////////////////////////////////////////
+   
    printf("Total ops = %d\n", total_ops);
    printf("member ops = %d\n", member_count);
    printf("insert ops = %d\n", insert_count);
