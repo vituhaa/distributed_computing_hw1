@@ -27,7 +27,7 @@ pthread_barrier_t barrier;
 
 FILE *output_csv; 
 
-int iteration_count = 5;
+int iteration_count = 1000;
 
 // сила на тело q со стороны тела k
 double calc_fqk(double mk, double mq, double r2, double delta){
@@ -91,13 +91,13 @@ void* routine(void* rank){
 				double f_zqk = calc_fqk(bodies_list[k].mass, bodies_list[q].mass, r2, delta_z);
 
 				// третий з-н ньютона
-				rank_forces[3 * q + 0] += f_xqk * delta_x;
-				rank_forces[3 * q + 1] += f_yqk * delta_y;
-				rank_forces[3 * q + 2] += f_zqk * delta_z;
+				rank_forces[3 * q + 0] += f_xqk;
+				rank_forces[3 * q + 1] += f_yqk;
+				rank_forces[3 * q + 2] += f_zqk;
 
-				rank_forces[3 * k + 0] -= f_xqk * delta_x;
-				rank_forces[3 * k + 1] -= f_yqk * delta_y;
-				rank_forces[3 * k + 2] -= f_zqk * delta_z;
+				rank_forces[3 * k + 0] -= f_xqk;
+				rank_forces[3 * k + 1] -= f_yqk;
+				rank_forces[3 * k + 2] -= f_zqk;
 			}
 
 		}

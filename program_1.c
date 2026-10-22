@@ -20,7 +20,7 @@ struct pairs{
 
 struct pairs *coords = NULL; // для записи в csv файл
 
-int iteration_count = 5;
+int iteration_count = 1;
 
 int mandelbrot(float c_x, float c_y){
         float z_x = 0.0f;
