@@ -58,10 +58,12 @@ void* routine(void* rank){
 
                         colors[i][j] = mandelbrot(c_x, c_y); // записываем итерации
 
-			// записываем координаты
-			coords[curr_num].x = c_x;
-			coords[curr_num].y = c_y;
-			curr_num += 1;
+			if (colors[i][j] == MAX_ITERATIONS){
+				// записываем координаты
+                        	coords[curr_num].x = c_x;
+                        	coords[curr_num].y = c_y;
+                        	curr_num += 1;
+			}
 
 			// достигли point_count, выходим
 			if (curr_num >= point_count){
@@ -85,7 +87,7 @@ int main(int argc, char** argv) {
 
         coords = malloc(point_count * sizeof(*coords));
 
-        double total_time;
+        double total_time = 0.0;
         for (int i = 0; i < iteration_count; i++)
         {
                 printf("\nIteration %d\n", i + 1);

@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
 
    ////////////////////////////////////////////////////////
 
-   double total_time;
+   double total_time = 0.0;
 
    for (int iter = 0; iter < iteration_count; iter++){
 

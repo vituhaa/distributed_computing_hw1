@@ -201,7 +201,7 @@ int main(int argc, char** argv){
 
 	pthread_barrier_init(&barrier, NULL, thread_count);
 
-	double total_time;
+	double total_time = 0.0;
 
 	for (int i = 0; i < iteration_count; i++)
 	{
